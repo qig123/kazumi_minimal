@@ -42,11 +42,29 @@ class _SimplePlayerPageState extends State<SimplePlayerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SizedBox.expand(
-        child: Video(
-          controller: _videoController,
-          fit: BoxFit.contain,
-        ),
+      body: Stack(
+        children: [
+          const SizedBox.expand(),
+          SizedBox.expand(
+            child: Video(
+              controller: _videoController,
+              fit: BoxFit.contain,
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  tooltip: 'Back',
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
