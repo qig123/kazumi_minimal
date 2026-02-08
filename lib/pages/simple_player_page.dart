@@ -25,11 +25,15 @@ class _SimplePlayerPageState extends State<SimplePlayerPage> {
     super.initState();
     _player = Player(
       configuration: const PlayerConfiguration(
-        adBlocker: true, // å¼€å¯åŸç”Ÿ FFmpeg çš„ hls_ad_filter
-        logLevel: MPVLogLevel.info,
+        adBlocker: true, // ¿ªÆôÔ­Éú FFmpeg µÄ hls_ad_filter
+        logLevel: MPVLogLevel.v,
       ),
     );
     _videoController = VideoController(_player);
+
+    _player.stream.log.listen((event) {
+      debugPrint('MPV LOG: [${event.level}] ${event.prefix}: ${event.text}');
+    });
 
     _player.open(
       Media(widget.url, httpHeaders: widget.headers),
