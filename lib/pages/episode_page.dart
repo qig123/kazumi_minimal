@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:kazumi_minimal/pages/simple_player_page.dart';
 
 import '../models/episode_item.dart';
 import '../models/plugin_rule.dart';
 import '../models/search_item.dart';
 import '../services/anime_parser_service.dart';
 import '../services/video_sniffer_service.dart';
-import 'simple_player_page.dart';
 
 class EpisodePage extends StatefulWidget {
   final PluginRule rule;
@@ -76,14 +76,17 @@ class _EpisodePageState extends State<EpisodePage>
     });
   }
 
-  Map<String, String> _buildHeaders(String playPageUrl) {
+  Map<String, String> _buildHeaders(PluginRule rule, String playPageUrl) {
     final origin = Uri.parse(playPageUrl).origin;
-    final referer = origin.isEmpty ? playPageUrl : '$origin/';
+    // TODO: Try randomized UA (Kazumi-style) if playback issues persist.
+    final userAgent = rule.userAgent.isNotEmpty
+        ? rule.userAgent
+        : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+            '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
     return {
-      'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-          '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Referer': referer,
+      'user-agent': userAgent,
+      if (rule.referer.isNotEmpty) 'referer': rule.referer,
+      if (rule.referer.isNotEmpty && origin.isNotEmpty) 'origin': origin,
     };
   }
 
@@ -117,7 +120,7 @@ class _EpisodePageState extends State<EpisodePage>
         MaterialPageRoute(
           builder: (_) => SimplePlayerPage(
             url: directUrl,
-            headers: _buildHeaders(playPageUrl),
+            headers: _buildHeaders(widget.rule, playPageUrl),
           ),
         ),
       );

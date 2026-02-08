@@ -25,7 +25,7 @@ class _SimplePlayerPageState extends State<SimplePlayerPage> {
     super.initState();
     _player = Player(
       configuration: const PlayerConfiguration(
-        adBlocker: true, // 开启原生 FFmpeg 的 hls_ad_filter
+        adBlocker: true,
         logLevel: MPVLogLevel.v,
       ),
     );
@@ -34,6 +34,9 @@ class _SimplePlayerPageState extends State<SimplePlayerPage> {
     _player.stream.log.listen((event) {
       debugPrint('MPV LOG: [${event.level}] ${event.prefix}: ${event.text}');
     });
+
+    debugPrint('Player open url: ${widget.url}');
+    debugPrint('Player headers: ${widget.headers}');
 
     _player.open(
       Media(widget.url, httpHeaders: widget.headers),

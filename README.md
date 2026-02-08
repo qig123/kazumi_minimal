@@ -15,8 +15,8 @@ Minimal Flutter desktop demo that searches anime via XPath rules and plays the r
 ## End-to-End Flow
 1. User enters a title
 2. Search returns items
-3. Tap an item ¡ú parse detail page episodes
-4. Select route + episode ¡ú build play page URL
+3. Tap an item ï¿½ï¿½ parse detail page episodes
+4. Select route + episode ï¿½ï¿½ build play page URL
 5. Headless WebView sniffs `.m3u8` / `video/mp4`
 6. Direct URL is passed to `media_kit` and played
 
@@ -39,8 +39,8 @@ Minimal Flutter desktop demo that searches anime via XPath rules and plays the r
 ## Episode Parsing (Kazumi Style)
 - `parseChapters(rule, detailUrl)`
 - GET detail page via Dio
-- XPath `chapterRoads` ¡ú per-road nodes
-- XPath `chapterResult` ¡ú episode links
+- XPath `chapterRoads` ï¿½ï¿½ per-road nodes
+- XPath `chapterResult` ï¿½ï¿½ episode links
 - Build `EpisodeItem(title, url, roadIndex)` and filter empty values
 - Group by `roadIndex` for route tabs
 
@@ -77,5 +77,13 @@ Required fields used by the demo:
 - `chapterRoads` (XPath for route blocks)
 - `chapterResult` (XPath for episode links)
 
+Optional fields:
+- `userAgent`
+- `referer`
+
+## TODO
+- Consider randomized User-Agent (Kazumi-style) if specific sources fail to play.
+
 ## Notes
 - `aowu.json` is loaded from assets via `rootBundle`, so keep it listed under `flutter.assets` in `pubspec.yaml`.
+- _resolveWithProvideræ‹¿åˆ°source

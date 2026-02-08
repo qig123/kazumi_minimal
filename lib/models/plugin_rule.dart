@@ -7,6 +7,8 @@ class PluginRule {
   final String searchResult;
   final String chapterRoads;
   final String chapterResult;
+  final String userAgent;
+  final String referer;
 
   PluginRule({
     required this.name,
@@ -17,6 +19,8 @@ class PluginRule {
     required this.searchResult,
     required this.chapterRoads,
     required this.chapterResult,
+    required this.userAgent,
+    required this.referer,
   });
 
   factory PluginRule.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,8 @@ class PluginRule {
       searchResult: (json['searchResult'] ?? '') as String,
       chapterRoads: (json['chapterRoads'] ?? '') as String,
       chapterResult: (json['chapterResult'] ?? '') as String,
+      userAgent: (json['userAgent'] ?? '') as String,
+      referer: (json['referer'] ?? '') as String,
     );
   }
 }
