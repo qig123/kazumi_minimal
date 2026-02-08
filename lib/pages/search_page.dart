@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import '../models/plugin_rule.dart';
 import '../models/search_item.dart';
 import '../services/anime_parser_service.dart';
 import '../services/video_sniffer_service.dart';
+import 'simple_player_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -115,8 +117,24 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  Map<String, String> _buildHeaders(String playPageUrl) {
+    final origin = Uri.parse(playPageUrl).origin;
+    final referer = origin.isEmpty ? playPageUrl : '$origin/';
+    return {
+      'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+          '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': referer,
+    };
+  }
+
   Future<void> _sniffVideo(String link) async {
-    final fullUrl =
+    if (!Platform.isWindows) {
+      setState(() => _error = 'Windows only');
+      return;
+    }
+
+    final playPageUrl =
         Uri.parse(_rule!.baseUrl).resolve(link).toString();
 
     showDialog(
@@ -135,20 +153,16 @@ class _SearchPageState extends State<SearchPage> {
     );
 
     try {
-      final url = await _sniffer.getDirectUrl(fullUrl);
+      final directUrl = await _sniffer.getDirectUrl(playPageUrl);
       if (!mounted) return;
       Navigator.of(context).pop();
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Direct URL'),
-          content: SelectableText(url),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => SimplePlayerPage(
+            url: directUrl,
+            headers: _buildHeaders(playPageUrl),
+          ),
         ),
       );
     } catch (e) {

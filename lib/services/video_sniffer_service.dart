@@ -25,6 +25,20 @@ class VideoSnifferService {
     final completer = Completer<String>();
     bool done = false;
 
+    bool isM3u8(String url, String? contentType) {
+      final lower = url.toLowerCase();
+      final ct = (contentType ?? '').toLowerCase();
+      return lower.contains('.m3u8') ||
+          ct.contains('application/vnd.apple.mpegurl') ||
+          ct.contains('application/x-mpegurl');
+    }
+
+    bool isMp4(String url, String? contentType) {
+      final lower = url.toLowerCase();
+      final ct = (contentType ?? '').toLowerCase();
+      return lower.contains('.mp4') || ct.contains('video/mp4');
+    }
+
     void completeWith(String url) {
       if (done) return;
       done = true;
@@ -38,13 +52,14 @@ class VideoSnifferService {
 
     _subs.add(_webview!.onM3USourceLoaded.listen((data) {
       final url = data['url'] ?? '';
-      if (url.isNotEmpty) {
+      if (url.isNotEmpty && isM3u8(url, 'application/vnd.apple.mpegurl')) {
         completeWith(url);
       }
     }));
     _subs.add(_webview!.onVideoSourceLoaded.listen((data) {
       final url = data['url'] ?? '';
-      if (url.isNotEmpty) {
+      final contentType = data['contentType'];
+      if (url.isNotEmpty && (isMp4(url, contentType) || isM3u8(url, contentType))) {
         completeWith(url);
       }
     }));
