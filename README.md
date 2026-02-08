@@ -1,6 +1,6 @@
 # kazumi_minimal
 
-Minimal Flutter demo that searches anime via XPath rules defined in JSON.
+Minimal Flutter demo that searches anime via XPath rules defined in JSON and can sniff the real video stream URL using a headless WebView (Kazumi style).
 
 ## Overview
 - Loads rule config from `aowu.json`
@@ -8,13 +8,28 @@ Minimal Flutter demo that searches anime via XPath rules defined in JSON.
 - Fetches HTML with Dio and a Chrome User-Agent
 - Parses items with `xpath_selector_html_parser`
 - Displays results in a simple list UI
-- Tap a result to print the resolved full URL
+- Tap a result to sniff the direct video URL via headless WebView
+
+## Core Sniffing Flow (Kazumi Style)
+- Create `HeadlessWebview` (webview_windows)
+- `run()` the headless instance
+- Listen to:
+  - `onM3USourceLoaded`
+  - `onVideoSourceLoaded`
+- `loadUrl(episodeUrl)`
+- First match wins, print URL and redirect to `about:blank`
+- Timeout if nothing is detected
+
+### Runtime Notes
+- WebView2 Runtime is required on Windows. The sniffer checks `HeadlessWebview.getWebViewVersion()` and throws if missing.
+- `webview_windows` does not provide direct request headers in `loadUrl`, so Referer is simulated by loading the origin first and then setting `window.location.href` to the play page.
 
 ## Project Structure
 - `lib/models/plugin_rule.dart` Rule model
 - `lib/models/search_item.dart` Search item model
 - `lib/services/anime_parser_service.dart` HTML fetch + XPath parse
-- `lib/pages/search_page.dart` Search UI
+- `lib/services/video_sniffer_service.dart` Headless WebView sniffer
+- `lib/pages/search_page.dart` Search UI + sniff dialog
 - `aowu.json` Example rule file (also registered as an asset)
 
 ## Run

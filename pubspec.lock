@@ -304,6 +304,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  webview_windows:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "9962cb9416f867d9ce9f409ccd6784e78c5f72ca"
+      resolved-ref: "9962cb9416f867d9ce9f409ccd6784e78c5f72ca"
+      url: "https://github.com/Predidit/flutter-webview-windows.git"
+    source: git
+    version: "0.4.0"
   xpath_selector:
     dependency: "direct main"
     description:

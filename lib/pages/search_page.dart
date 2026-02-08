@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../models/plugin_rule.dart';
 import '../models/search_item.dart';
 import '../services/anime_parser_service.dart';
+import '../services/video_sniffer_service.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -16,6 +17,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   final _controller = TextEditingController();
   final _parser = AnimeParserService();
+  final _sniffer = VideoSnifferService();
 
   List<SearchItem> _results = [];
   PluginRule? _rule;
@@ -102,10 +104,7 @@ class _SearchPageState extends State<SearchPage> {
                 return ListTile(
                   title: Text(item.name),
                   onTap: () {
-                    final fullUrl = Uri.parse(_rule!.baseUrl)
-                        .resolve(item.link)
-                        .toString();
-                    debugPrint(fullUrl);
+                    _sniffVideo(item.link);
                   },
                 );
               },
@@ -114,5 +113,60 @@ class _SearchPageState extends State<SearchPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _sniffVideo(String link) async {
+    final fullUrl =
+        Uri.parse(_rule!.baseUrl).resolve(link).toString();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        title: Text('Sniffing video source...'),
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 12),
+            Expanded(child: Text('Please wait')),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final url = await _sniffer.getDirectUrl(fullUrl);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Direct URL'),
+          content: SelectableText(url),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Sniff failed'),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
