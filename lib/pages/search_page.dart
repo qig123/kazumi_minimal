@@ -1,7 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../models/plugin_rule.dart';
 import '../models/rule_info.dart';
 import '../models/search_item.dart';
@@ -37,26 +35,19 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _loadRules() async {
     try {
-      final rules = await _repo.loadIndex();
-      if (rules.isNotEmpty) {
-        _rules = rules;
-        _selectedRule = rules.first;
-        _rule = await _repo.loadRule(_selectedRule!.name);
-        setState(() => _error = null);
+      debugPrint('SearchPage: loading rules from cache');
+      final rules = await _repo.loadIndexFromCache();
+      if (rules.isEmpty) {
+        debugPrint('SearchPage: no cached rules available');
+        setState(() => _error = 'No rules. Tap Rules to refresh.');
         return;
       }
-    } catch (e) {
-      setState(() => _error = 'Failed to load rules: $e');
-    }
-
-    // fallback to bundled rule
-    try {
-      final jsonStr = await rootBundle.loadString('aowu.json');
-      final map = json.decode(jsonStr) as Map<String, dynamic>;
-      _rule = PluginRule.fromJson(map);
+      _rules = rules;
+      _selectedRule = rules.first;
+      _rule = await _repo.loadRule(_selectedRule!.name);
       setState(() => _error = null);
     } catch (e) {
-      setState(() => _error = 'Failed to load rule: $e');
+      setState(() => _error = 'Failed to load rules: $e');
     }
   }
 
@@ -174,13 +165,15 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<List<RuleInfo>> _refreshRules(bool includeOutdated) async {
-    final rules = await _repo.loadIndex(includeOutdated: includeOutdated);
+    debugPrint('SearchPage: refreshing rules from remote');
+    final rules = await _repo.refreshIndex(includeOutdated: includeOutdated);
     setState(() => _rules = rules);
     return rules;
   }
 
   Future<void> _selectRule(RuleInfo rule) async {
     try {
+      debugPrint('SearchPage: selecting rule ${rule.name}');
       final loaded = await _repo.loadRule(rule.name);
       setState(() {
         _selectedRule = rule;

@@ -14,47 +14,51 @@ class RuleRepository {
   static const Duration requestTimeout = Duration(seconds: 10);
   static const String cacheFileName = 'rules_cache.json';
 
-  Future<List<RuleInfo>> loadIndex({bool includeOutdated = false}) async {
+  Future<List<RuleInfo>> loadIndexFromCache(
+      {bool includeOutdated = false}) async {
     final cache = await _loadCache();
-    try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/$indexFile'))
-          .timeout(requestTimeout);
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to load index: ${response.statusCode}');
-      }
-
-      final content = utf8.decode(response.bodyBytes);
-      final list = json.decode(content) as List<dynamic>;
-
-      final rules = list
-          .map((e) => RuleInfo.fromJson(e as Map<String, dynamic>))
-          .where((r) => includeOutdated ? r.name.isNotEmpty : _isActive(r))
-          .toList()
-        ..sort(_sortRules);
-
-      await _saveCache(content);
-      debugPrint('Loaded rules from GitHub: ${rules.length}');
-      return rules;
-    } catch (e) {
-      debugPrint('Error loading index: $e');
-      if (cache != null) {
-        final list = json.decode(cache) as List<dynamic>;
-        final rules = list
-            .map((e) => RuleInfo.fromJson(e as Map<String, dynamic>))
-            .where((r) => includeOutdated ? r.name.isNotEmpty : _isActive(r))
-            .toList()
-          ..sort(_sortRules);
-        debugPrint('Loaded rules from cache: ${rules.length}');
-        return rules;
-      }
-      rethrow;
+    if (cache == null) {
+      debugPrint('RuleRepository: cache miss at ${_cachePath()}');
+      return [];
     }
+
+    final list = json.decode(cache) as List<dynamic>;
+    final rules = list
+        .map((e) => RuleInfo.fromJson(e as Map<String, dynamic>))
+        .where((r) => includeOutdated ? r.name.isNotEmpty : _isActive(r))
+        .toList()
+      ..sort(_sortRules);
+
+    debugPrint('RuleRepository: loaded rules from cache: ${rules.length}');
+    return rules;
+  }
+
+  Future<List<RuleInfo>> refreshIndex({bool includeOutdated = false}) async {
+    final response = await http
+        .get(Uri.parse('$baseUrl/$indexFile'))
+        .timeout(requestTimeout);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load index: ${response.statusCode}');
+    }
+
+    final content = utf8.decode(response.bodyBytes);
+    final list = json.decode(content) as List<dynamic>;
+
+    final rules = list
+        .map((e) => RuleInfo.fromJson(e as Map<String, dynamic>))
+        .where((r) => includeOutdated ? r.name.isNotEmpty : _isActive(r))
+        .toList()
+      ..sort(_sortRules);
+
+    await _saveCache(content);
+    debugPrint('RuleRepository: refreshed rules from GitHub: ${rules.length}');
+    return rules;
   }
 
   Future<PluginRule> loadRule(String name) async {
     try {
+      debugPrint('RuleRepository: loading rule from GitHub: $name');
       final response = await http
           .get(Uri.parse('$baseUrl/$name.json'))
           .timeout(requestTimeout);
@@ -65,6 +69,7 @@ class RuleRepository {
 
       final content = utf8.decode(response.bodyBytes);
       final jsonMap = json.decode(content) as Map<String, dynamic>;
+      debugPrint('RuleRepository: loaded rule from GitHub: $name');
       return PluginRule.fromJson(jsonMap);
     } catch (e) {
       debugPrint('Error loading rule $name: $e');
@@ -90,6 +95,7 @@ class RuleRepository {
     try {
       final file = File(_cachePath());
       if (!await file.exists()) return null;
+      debugPrint('RuleRepository: reading cache ${file.path}');
       return await file.readAsString();
     } catch (_) {
       return null;
@@ -101,6 +107,7 @@ class RuleRepository {
       final file = File(_cachePath());
       await file.parent.create(recursive: true);
       await file.writeAsString(content);
+      debugPrint('RuleRepository: saved cache ${file.path}');
     } catch (_) {}
   }
 

@@ -22,9 +22,10 @@ Minimal Flutter desktop demo that searches anime via XPath rules and plays the r
 
 ## Rule Management
 - Source: `https://raw.githubusercontent.com/Predidit/KazumiRules/master/index.json`
-- Manual refresh from the Rule picker page
+- Manual refresh from the Rule picker page (only time remote fetch happens)
 - Outdated rules are hidden by default (toggle to show)
 - Cached locally in `%APPDATA%\kazumi_minimal\rules_cache.json`
+- On startup, only cache is read; if empty, no rules are shown until refresh.
 
 ## Core Sniffing Flow (Kazumi Style)
 - Create `HeadlessWebview` (webview_windows)
@@ -60,7 +61,6 @@ Minimal Flutter desktop demo that searches anime via XPath rules and plays the r
 - `lib/pages/rule_picker_page.dart` Rule picker UI
 - `lib/pages/episode_page.dart` Routes + episodes UI
 - `lib/pages/simple_player_page.dart` media_kit full-screen player
-- `aowu.json` Example rule file (also registered as an asset)
 
 ## Run
 1. `flutter pub get`
@@ -85,5 +85,4 @@ Optional fields:
 - Consider randomized User-Agent (Kazumi-style) if specific sources fail to play.
 
 ## Notes
-- `aowu.json` is loaded from assets via `rootBundle`, so keep it listed under `flutter.assets` in `pubspec.yaml`.
 - _resolveWithProvider拿到source
