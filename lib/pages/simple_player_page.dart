@@ -23,7 +23,12 @@ class _SimplePlayerPageState extends State<SimplePlayerPage> {
   @override
   void initState() {
     super.initState();
-    _player = Player();
+    _player = Player(
+      configuration: const PlayerConfiguration(
+        adBlocker: true, // 开启原生 FFmpeg 的 hls_ad_filter
+        logLevel: MPVLogLevel.info,
+      ),
+    );
     _videoController = VideoController(_player);
 
     _player.open(
