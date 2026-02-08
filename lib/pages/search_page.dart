@@ -166,7 +166,7 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<List<RuleInfo>> _refreshRules(bool includeOutdated) async {
     debugPrint('SearchPage: refreshing rules from remote');
-    final rules = await _repo.refreshIndex(includeOutdated: includeOutdated);
+    final rules = await _repo.refreshIndex(includeOutdated: true);
     setState(() => _rules = rules);
     return rules;
   }
@@ -182,7 +182,8 @@ class _SearchPageState extends State<SearchPage> {
         _error = null;
       });
     } catch (e) {
-      setState(() => _error = 'Failed to load rule: $e');
+      setState(() =>
+          _error = 'Failed to load rule: $e. Tap Rules to refresh.');
     }
   }
 }

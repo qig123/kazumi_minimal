@@ -18,27 +18,29 @@ class RulePickerPage extends StatefulWidget {
 }
 
 class _RulePickerPageState extends State<RulePickerPage> {
+  late List<RuleInfo> _allRules;
   late List<RuleInfo> _rules;
   RuleInfo? _selected;
   bool _loading = false;
   bool _showOutdated = false;
+  static const int _outdatedDays = 365;
 
   @override
   void initState() {
     super.initState();
-    _rules = widget.rules;
+    _allRules = widget.rules;
+    _rules = _filterRules(_allRules, _showOutdated);
     _selected = widget.selected;
-
-    if (_rules.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
-    }
   }
 
   Future<void> _refresh() async {
     setState(() => _loading = true);
     try {
-      final rules = await widget.onRefresh(_showOutdated);
-      setState(() => _rules = rules);
+      final rules = await widget.onRefresh(true);
+      setState(() {
+        _allRules = rules;
+        _rules = _filterRules(_allRules, _showOutdated);
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -70,10 +72,8 @@ class _RulePickerPageState extends State<RulePickerPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text('No available rules'),
-                      TextButton(
-                        onPressed: _refresh,
-                        child: const Text('Retry'),
-                      )
+                      const SizedBox(height: 8),
+                      const Text('Tap refresh to download rules'),
                     ],
                   ),
                 )
@@ -85,8 +85,10 @@ class _RulePickerPageState extends State<RulePickerPage> {
                           title: const Text('Show outdated rules'),
                           value: _showOutdated,
                           onChanged: (value) {
-                            setState(() => _showOutdated = value);
-                            _refresh();
+                            setState(() {
+                              _showOutdated = value;
+                              _rules = _filterRules(_allRules, _showOutdated);
+                            });
                           },
                         ),
                         const Divider(height: 1),
@@ -123,5 +125,17 @@ class _RulePickerPageState extends State<RulePickerPage> {
                   ],
                 ),
     );
+  }
+
+  List<RuleInfo> _filterRules(List<RuleInfo> rules, bool includeOutdated) {
+    if (includeOutdated) return List<RuleInfo>.from(rules);
+    final cutoff =
+        DateTime.now().subtract(const Duration(days: _outdatedDays));
+    return rules.where((rule) {
+      if (rule.name.isEmpty) return false;
+      if (rule.lastUpdate <= 0) return false;
+      final last = DateTime.fromMillisecondsSinceEpoch(rule.lastUpdate);
+      return last.isAfter(cutoff);
+    }).toList();
   }
 }

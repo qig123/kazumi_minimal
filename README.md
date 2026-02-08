@@ -26,6 +26,7 @@ Minimal Flutter desktop demo that searches anime via XPath rules and plays the r
 - Outdated rules are hidden by default (toggle to show)
 - Cached locally in `%APPDATA%\kazumi_minimal\rules_cache.json`
 - On startup, only cache is read; if empty, no rules are shown until refresh.
+- Refresh downloads index and rule files into local cache.
 
 ## Core Sniffing Flow (Kazumi Style)
 - Create `HeadlessWebview` (webview_windows)

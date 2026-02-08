@@ -53,23 +53,18 @@ class RuleRepository {
 
     await _saveCache(content);
     debugPrint('RuleRepository: refreshed rules from GitHub: ${rules.length}');
+    await _refreshRuleFiles(rules);
     return rules;
   }
 
   Future<PluginRule> loadRule(String name) async {
     try {
-      debugPrint('RuleRepository: loading rule from GitHub: $name');
-      final response = await http
-          .get(Uri.parse('$baseUrl/$name.json'))
-          .timeout(requestTimeout);
-
-      if (response.statusCode != 200) {
-        throw Exception('Rule file not found: $name.json');
+      final content = await _loadRuleCache(name);
+      if (content == null) {
+        throw Exception('Rule not cached: $name');
       }
-
-      final content = utf8.decode(response.bodyBytes);
       final jsonMap = json.decode(content) as Map<String, dynamic>;
-      debugPrint('RuleRepository: loaded rule from GitHub: $name');
+      debugPrint('RuleRepository: loaded rule from cache: $name');
       return PluginRule.fromJson(jsonMap);
     } catch (e) {
       debugPrint('Error loading rule $name: $e');
@@ -111,11 +106,58 @@ class RuleRepository {
     } catch (_) {}
   }
 
+  Future<void> _refreshRuleFiles(List<RuleInfo> rules) async {
+    for (final rule in rules) {
+      if (rule.name.isEmpty) continue;
+      try {
+        debugPrint('RuleRepository: downloading rule ${rule.name}');
+        final response = await http
+            .get(Uri.parse('$baseUrl/${rule.name}.json'))
+            .timeout(requestTimeout);
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
+        }
+        final content = utf8.decode(response.bodyBytes);
+        await _saveRuleCache(rule.name, content);
+      } catch (e) {
+        debugPrint('RuleRepository: failed to download rule ${rule.name}: $e');
+      }
+    }
+  }
+
+  Future<String?> _loadRuleCache(String name) async {
+    try {
+      final file = File(_ruleCachePath(name));
+      if (!await file.exists()) return null;
+      debugPrint('RuleRepository: reading rule cache ${file.path}');
+      return await file.readAsString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveRuleCache(String name, String content) async {
+    try {
+      final file = File(_ruleCachePath(name));
+      await file.parent.create(recursive: true);
+      await file.writeAsString(content);
+      debugPrint('RuleRepository: saved rule cache ${file.path}');
+    } catch (_) {}
+  }
+
   String _cachePath() {
     final appData = Platform.environment['APPDATA'];
     if (appData != null && appData.isNotEmpty) {
       return '$appData\\kazumi_minimal\\$cacheFileName';
     }
     return '${Directory.systemTemp.path}\\$cacheFileName';
+  }
+
+  String _ruleCachePath(String name) {
+    final appData = Platform.environment['APPDATA'];
+    if (appData != null && appData.isNotEmpty) {
+      return '$appData\\kazumi_minimal\\rules\\$name.json';
+    }
+    return '${Directory.systemTemp.path}\\kazumi_minimal\\rules\\$name.json';
   }
 }
