@@ -37,6 +37,7 @@ dependencies:
   dio: ^5.4.0
   xpath_selector: ^3.0.2
   xpath_selector_html_parser: ^3.0.1
+  http: ^1.6.0
   webview_windows:
     git:
       url: https://github.com/Predidit/flutter-webview-windows.git

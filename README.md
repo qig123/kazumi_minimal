@@ -3,7 +3,7 @@
 Minimal Flutter desktop demo that searches anime via XPath rules and plays the real stream URL sniffed from a headless WebView (Kazumi style, Windows-only).
 
 ## Overview
-- Loads rule config from `aowu.json`
+- Loads rules from KazumiRules (GitHub raw, manual refresh, cached locally)
 - Builds search URL from keyword
 - Fetches HTML with Dio and a Chrome User-Agent
 - Parses items with `xpath_selector_html_parser`
@@ -19,6 +19,12 @@ Minimal Flutter desktop demo that searches anime via XPath rules and plays the r
 4. Select route + episode ¡ú build play page URL
 5. Headless WebView sniffs `.m3u8` / `video/mp4`
 6. Direct URL is passed to `media_kit` and played
+
+## Rule Management
+- Source: `https://raw.githubusercontent.com/Predidit/KazumiRules/master/index.json`
+- Manual refresh from the Rule picker page
+- Outdated rules are hidden by default (toggle to show)
+- Cached locally in `%APPDATA%\kazumi_minimal\rules_cache.json`
 
 ## Core Sniffing Flow (Kazumi Style)
 - Create `HeadlessWebview` (webview_windows)
@@ -46,9 +52,12 @@ Minimal Flutter desktop demo that searches anime via XPath rules and plays the r
 - `lib/models/plugin_rule.dart` Rule model
 - `lib/models/search_item.dart` Search item model
 - `lib/models/episode_item.dart` Episode model
+- `lib/models/rule_info.dart` Rule index model
 - `lib/services/anime_parser_service.dart` HTML fetch + XPath parse
 - `lib/services/video_sniffer_service.dart` Headless WebView sniffer
+- `lib/services/rule_repository.dart` Rule loader + cache
 - `lib/pages/search_page.dart` Search UI
+- `lib/pages/rule_picker_page.dart` Rule picker UI
 - `lib/pages/episode_page.dart` Routes + episodes UI
 - `lib/pages/simple_player_page.dart` media_kit full-screen player
 - `aowu.json` Example rule file (also registered as an asset)
