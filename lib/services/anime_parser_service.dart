@@ -2,6 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:xpath_selector_html_parser/xpath_selector_html_parser.dart';
 
 import '../models/plugin_rule.dart';
+import 'package:flutter/foundation.dart';
+
+import '../models/episode_item.dart';
 import '../models/search_item.dart';
 
 class AnimeParserService {
@@ -52,5 +55,44 @@ class AnimeParserService {
     }
 
     return results;
+  }
+
+  Future<List<EpisodeItem>> parseChapters(
+    PluginRule rule,
+    String detailUrl,
+  ) async {
+    try {
+      final response = await _dio.get(detailUrl);
+      final xpath = HtmlXPath.html(response.data);
+      final roadNodes = xpath.query(rule.chapterRoads).nodes;
+      final List<EpisodeItem> results = [];
+
+      for (var i = 0; i < roadNodes.length; i++) {
+        final roadNode = roadNodes[i];
+        final roadXpath = HtmlXPath(roadNode);
+        final itemNodes = roadXpath.query(rule.chapterResult).nodes;
+
+        for (final node in itemNodes) {
+          final title = (node.text ?? '').trim();
+          final href = node.attributes['href'] ?? '';
+          if (title.isEmpty || href.isEmpty) continue;
+
+          final url = Uri.parse(rule.baseUrl).resolve(href).toString();
+          results.add(EpisodeItem(
+            title: title,
+            url: url,
+            roadIndex: i,
+          ));
+        }
+      }
+
+      debugPrint(
+        'parseChapters: ${results.length} items from $detailUrl',
+      );
+      return results;
+    } catch (e) {
+      debugPrint('parseChapters error: $e');
+      return [];
+    }
   }
 }
