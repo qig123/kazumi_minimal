@@ -1,7 +1,6 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:kazumi_minimal/utils/Utils.dart';
+import 'package:kazumi_minimal/utils/utils.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 

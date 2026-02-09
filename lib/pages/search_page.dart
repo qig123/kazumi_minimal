@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../models/plugin_rule.dart';
 import '../models/rule_info.dart';
 import '../models/search_item.dart';
