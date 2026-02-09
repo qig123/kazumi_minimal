@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:kazumi_minimal/utils/Utils.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
@@ -35,6 +38,12 @@ class _SimplePlayerPageState extends State<SimplePlayerPage> {
       debugPrint('MPV LOG: [${event.level}] ${event.prefix}: ${event.text}');
     });
 
+    _initAndPlay();
+  }
+
+  Future<void> _initAndPlay() async {
+    await _setDemuxerCacheDir();
+
     debugPrint('Player open url: ${widget.url}');
     debugPrint('Player headers: ${widget.headers}');
 
@@ -42,6 +51,25 @@ class _SimplePlayerPageState extends State<SimplePlayerPage> {
       Media(widget.url, httpHeaders: widget.headers),
       play: true,
     );
+  }
+
+  Future<void> _setDemuxerCacheDir() async {
+    try {
+      final platform = _player.platform;
+      if (platform is! NativePlayer) return;
+
+      final cacheDir = Utils.getPlayerTempPath();
+      await platform.setProperty('demuxer-cache-dir', await cacheDir);
+      // await platform.setProperty('cache', 'yes');
+      // await platform.setProperty('demuxer-max-bytes', '524288000');
+      // await platform.setProperty('demuxer-readahead-secs', '120');
+      // await platform.setProperty('demuxer-max-back-bytes', '104857600');
+      // await platform.setProperty('hls-bitrate', 'max');
+      // await platform.setProperty('stream-buffer-size', '10485760');
+      debugPrint('Set demuxer-cache-dir: $cacheDir');
+    } catch (e) {
+      debugPrint('Failed to set demuxer-cache-dir: $e');
+    }
   }
 
   @override
